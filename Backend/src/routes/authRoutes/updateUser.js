@@ -10,13 +10,15 @@ router.put("/:email", async (req, res) => {
         const userFound = await User.findOneAndUpdate(
             {email:email},
             {firstName:name},
-            {new:true , select:userFound.firstName}
-        )
+            {new:true}
+        ).select("firstName")
 
         if (!userFound) {
-            return res.status(400).json({ message: "User Not Found" })
+            return res.status(400).json({ message: "User Not Found"})
         }
-        res.status(200).json({message:"User Updated Successfully"})
+        res.status(200).json({message:"User Updated Successfully",
+            updatedUser:userFound.firstName
+        })
     } catch (error) {
         console.error("Error in Updating User",error)
         return res.status(500).json({message:"Internal Server Error"})
