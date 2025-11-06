@@ -6,6 +6,7 @@ import ReportRoute from "./Journal/report.js"
 import getJournal from "./Journal/getReport.js"
 import userData from "./Journal/getJournal.js"
 import userUpdate from "./authRoutes/updateUser.js"
+import downloadReport from "./Pdf/generatePdf.js"
 
 
 
@@ -18,7 +19,7 @@ router.use("/journal",ReportRoute)
 router.use("/getJournal",getJournal)
 router.use("/userData",userData)
 router.use("/userupdate",userUpdate)
-
+router.use("/downloadpdf",downloadReport)
 router.get("/",(req,res)=>{
     res.json({
         message:"Availabe API Endpoints",
@@ -29,7 +30,8 @@ router.get("/",(req,res)=>{
             "/journal",
             "/getJournal/:userId",
             "/userData/:userId",
-            "/userupdate/:email"
+            "/userupdate/:email",
+            "/downloadpdf"
         ]
     })
 })
