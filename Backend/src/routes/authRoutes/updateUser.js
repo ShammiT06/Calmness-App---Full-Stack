@@ -10,7 +10,7 @@ router.put("/:email", async (req, res) => {
         const userFound = await User.findOneAndUpdate(
             {email:email},
             {firstName:name},
-            {new:true}
+            {new:true , select:userFound.firstName}
         )
 
         if (!userFound) {
