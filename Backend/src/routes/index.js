@@ -5,6 +5,7 @@ import verifyRoute from "./authRoutes/verifyUser.js"
 import ReportRoute from "./Journal/report.js"
 import getJournal from "./Journal/getReport.js"
 import userData from "./Journal/getJournal.js"
+import userUpdate from "./authRoutes/updateUser.js"
 
 
 
@@ -16,6 +17,7 @@ router.use("/verify",verifyRoute)
 router.use("/journal",ReportRoute)
 router.use("/getJournal",getJournal)
 router.use("/userData",userData)
+router.use("/userupdate",userUpdate)
 
 router.get("/",(req,res)=>{
     res.json({
@@ -26,7 +28,8 @@ router.get("/",(req,res)=>{
             "/verify/:token",
             "/journal",
             "/getJournal/:userId",
-            "/userData/:userId"
+            "/userData/:userId",
+            "/userupdate/:email"
         ]
     })
 })
