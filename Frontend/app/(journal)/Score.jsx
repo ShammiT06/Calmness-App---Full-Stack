@@ -17,7 +17,7 @@ function Score() {
             try {
                 const userValue = await AsyncStorage.getItem("userId");
 
-                const res = await axios.get(`https://wellness-backend-2-bd5h.onrender.com/api/getJournal/${userValue}`);
+                const res = await axios.get(`https://calmness-app-full-stack.onrender.com/api/getJournal/${userValue}`);
                 console.log("Journal data:", res.data);
                 setScore(res.data[0].score)
                 setEmotion(res.data[0].emotions)

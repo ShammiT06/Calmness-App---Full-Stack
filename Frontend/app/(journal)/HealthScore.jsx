@@ -31,7 +31,7 @@ export default function HealthScore() {
     }
 
     try {
-      const response = await fetch("https://wellness-backend-2-bd5h.onrender.com/api/journal", {
+      const response = await fetch("https://calmness-app-full-stack.onrender.com/api/journal", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

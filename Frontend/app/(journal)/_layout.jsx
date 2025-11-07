@@ -12,5 +12,6 @@ export default function RootLayout() {
     <Stack.Screen name="Normal" />
     <Stack.Screen name="HealthScore" />
     <Stack.Screen name="Score" />
+    <Stack.Screen name="JournalDetails" />
   </Stack>;
 }

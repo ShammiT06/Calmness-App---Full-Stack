@@ -1,25 +1,49 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  TextInput,
+} from "react-native";
 import { useContext, useEffect, useState } from "react";
 import { ThemeContext } from "../(lib)/ThemeContext";
-import { TextInput } from "react-native"
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 
 function Journal() {
   const { theme, mode } = useContext(ThemeContext);
   const [activeTab, setActiveTab] = useState("New");
+  const [prevData, setPrevData] = useState([]);
+  const router = useRouter()
 
-
-  useEffect(()=>{
-    
-  })
+  useEffect(() => {
+    const fetchDetails = async () => {
+      try {
+        const userDetails = await AsyncStorage.getItem("userId");
+        if (!userDetails) return;
+        const res = await axios.get(
+          `https://calmness-app-full-stack.onrender.com/api/userData/${userDetails}`
+        )
+        if (Array.isArray(res.data)) {
+          setPrevData(res.data);
+        } else {
+          console.warn("Invalid data format:", res.data);
+          setPrevData([]);
+        }
+      } catch (error) {
+        console.log("Something Went Wrong", error);
+      }
+    };
+    fetchDetails();
+  }, []);
 
   return (
-    <ScrollView
-      style={[
-        styles.container,
-        { backgroundColor: theme.background },
-      ]}
+    <View
+      style={[styles.container, { backgroundColor: theme.background }]}
     >
       <View style={styles.heading}>
         <Text
@@ -31,122 +55,213 @@ function Journal() {
           Journal
         </Text>
       </View>
-      <View
-        style={[
-          styles.switchWrapper,
-          { backgroundColor: mode === "dark" ? "#2C3744" : theme.card },
-        ]}
-      >
+      <View style={styles.toggleContainer}>
         <TouchableOpacity
           style={[
-            styles.btn,
-            activeTab === "New" && {
-              backgroundColor: mode === "dark" ? "#4B8DD9" : "#333F4F",
-              elevation: 5,
-            },
+            styles.toggleButton,
+            activeTab === "New" && styles.activeToggle,
           ]}
           onPress={() => setActiveTab("New")}
         >
           <Text
             style={[
-              styles.btnText,
-              {
-                color:
-                  activeTab === "New"
-                    ? "#FFF"
-                    : mode === "dark"
-                      ? "#9CA3AF"
-                      : "#333F4F",
-              },
+              styles.toggleText,
+              activeTab === "New" && styles.activeToggleText,
             ]}
           >
             New
           </Text>
         </TouchableOpacity>
+
         <TouchableOpacity
           style={[
-            styles.btn,
-            activeTab === "History" && {
-              backgroundColor: mode === "dark" ? "#4B8DD9" : "#333F4F",
-              elevation: 5,
-            },
+            styles.toggleButton,
+            activeTab === "History" && styles.activeToggle,
           ]}
           onPress={() => setActiveTab("History")}
         >
           <Text
             style={[
-              styles.btnText,
-              {
-                color:
-                  activeTab === "History"
-                    ? "#FFF"
-                    : mode === "dark"
-                      ? "#9CA3AF"
-                      : "#333F4F",
-              },
+              styles.toggleText,
+              activeTab === "History" && styles.activeToggleText,
             ]}
           >
             History
           </Text>
         </TouchableOpacity>
       </View>
-      <View>
-        {
-          activeTab === 'New' ? <View>
-            <Text style={[styles.subHeading, { color: mode === "dark" ? theme.heading : "black" }]}>Save your moments of this day</Text>
-            <View style={[styles.inputHeading, { backgroundColor: theme.card }]}>
-              <TextInput placeholder="Journal Heading" style={{ color: mode === 'dark' ? theme.heading : "black" }} placeholderTextColor={mode === 'dark' ? theme.heading : theme.heading} />
-              <Ionicons name="pencil" size={20} color={mode === 'dark' ? theme.heading : theme.heading} />
-            </View>
-            <Text style={[styles.ContHeading, { color: mode === "dark" ? theme.heading : "black" }]}>Write your thoughts here</Text>
-            <View>
-              <TextInput
+      {activeTab === "New" ? (
+        <View>
+          <Text
+            style={[
+              styles.subHeading,
+              { color: mode === "dark" ? theme.heading : "black" },
+            ]}
+          >
+            Save your moments of this day
+          </Text>
+
+          <View style={[styles.inputHeading, { backgroundColor: theme.card }]}>
+            <TextInput
+              placeholder="Journal Title"
+              style={{ color: mode === "dark" ? theme.heading : "black" }}
+              placeholderTextColor={theme.heading}
+            />
+            <Ionicons
+              name="pencil"
+              size={20}
+              color={theme.heading}
+            />
+          </View>
+
+          <Text
+            style={[
+              styles.ContHeading,
+              { color: mode === "dark" ? theme.heading : "black" },
+            ]}
+          >
+            Write your thoughts here
+          </Text>
+
+          <View>
+            <TextInput
+              style={[
+                styles.inputCont,
+                {
+                  backgroundColor: theme.card,
+                  color: mode === "dark" ? theme.heading : "black",
+                },
+              ]}
+              multiline={true}
+              placeholder="Your Journal"
+              placeholderTextColor={theme.heading}
+              maxLength={300}
+            />
+          </View>
+          <Text
+            style={[
+              styles.emotionTxt,
+              { color: mode === "dark" ? theme.heading : "black" },
+            ]}
+          >
+            Mood
+          </Text>
+
+          <View
+            style={[styles.emotionContainer, { backgroundColor: theme.card }]}
+          >
+            {[
+              { label: "Happy", img: require("../../assets/Journal/Happy.png") },
+              { label: "UnHappy", img: require("../../assets/Journal/UnHappy.png") },
+              { label: "Normal", img: require("../../assets/Journal/Normal.png") },
+              { label: "Sad", img: require("../../assets/Journal/Sad.png") },
+              { label: "Angry", img: require("../../assets/Journal/Angry.png") },
+            ].map((item, index) => (
+              <View key={index}>
+                <Image source={item.img} style={styles.imgCont} />
+                <Text
+                  style={{
+                    color: mode === "dark" ? theme.heading : "black",
+                    textAlign: "center",
+                  }}
+                >
+                  {item.label}
+                </Text>
+              </View>
+            ))}
+          </View>
+          <View style={styles.conBtn}>
+            <TouchableOpacity
+              style={[styles.btn, { backgroundColor: theme.card }]}
+            >
+              <Text
+                style={{
+                  textAlign: "center",
+                  color: mode === "dark" ? theme.heading : theme.primary,
+                }}
+              >
+                Confirm
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : (
+        <View style={{ flex: 1 }}>
+          <FlatList
+            data={prevData}
+            keyExtractor={(item, index) => item._id?.toString() ?? index.toString()}
+            ListHeaderComponent={() => (
+              <Text
                 style={[
-                  styles.inputCont,
-                  { backgroundColor: theme.card, color: mode === "dark" ? theme.heading : "black" },
+                  styles.historyDesc,
+                  { color: mode === "dark" ? "#FFF" : "#333F4F" },
                 ]}
-                multiline={true}
-                placeholder="Your Journal"
-                placeholderTextColor={mode === "dark" ? theme.heading : theme.heading}
-              />
-            </View>
-            <Text style={[styles.emotionTxt, { color: mode === "dark" ? theme.heading : "black" }]}>Choose Your Emotions</Text>
-            <View style={[styles.emotionContainer, { backgroundColor: theme.card }]}>
-              <View>
-                <Image source={require("../../assets/Journal/Happy.png")} style={styles.imgCont} />
-                <Text style={{ color: mode === "dark" ? theme.heading : "black", textAlign: "center" }}>Happy</Text>
-              </View>
-              <View>
-                <Image source={require("../../assets/Journal/UnHappy.png")} style={styles.imgCont} />
-                <Text style={{ color: mode === "dark" ? theme.heading : "black", textAlign: "center" }}>UnHappy</Text>
-              </View>
-              <View>
-                <Image source={require("../../assets/Journal/Normal.png")} style={styles.imgCont} />
-                <Text style={{ color: mode === "dark" ? theme.heading : "black", textAlign: "center" }}>Normal</Text>
-              </View>
-              <View>
-                <Image source={require("../../assets/Journal/Sad.png")} style={styles.imgCont} />
-                <Text style={{ color: mode === "dark" ? theme.heading : "black", textAlign: "center" }}>Sad</Text>
-              </View>
-              <View>
-                <Image source={require("../../assets/Journal/Angry.png")} style={styles.imgCont} />
-                <Text style={{ color: mode === "dark" ? theme.heading : "black", textAlign: "center" }}>Angry</Text>
-              </View>
-            </View>
-            <View style={[styles.conBtn]}>
-              <TouchableOpacity style={[ styles.btn,{ backgroundColor: theme.card }]}>
-                <Text style={[{ textAlign: "center", color: mode === "dark" ? theme.heading : theme.primary }]}>Confrim</Text>
-              </TouchableOpacity>
-            </View>
+              >
+                Letting you revisit your past thoughts, moods, and moments in one place.
+              </Text>
+            )}
+            renderItem={({ item }) => (
+              <View
+                style={{
+                  backgroundColor: theme.card,
+                  marginHorizontal: 20,
+                  marginVertical: 10,
+                  padding: 15,
+                  borderRadius: 10,
+                }}
+              >
+                {/* Heading & Mood */}
+                <View style={styles.hisHeading}>
+                  <Text
+                    style={{
+                      color: mode === "dark" ? theme.heading : "black",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {item.heading || "Untitled"}
+                  </Text>
+                  <Text style={{ color: "#888", marginTop: 5, fontSize: 12 }}>
+                    Mood: {item.emotions || "Unknown"}
+                  </Text>
+                </View>
 
-          </View> :
-
-
-
-            <Text style={{ color: mode === "dark" ? "#FFF" : "#333F4F" }}>Byeee</Text>
-        }
-      </View>
-    </ScrollView>
+                {/* Description */}
+                <Text
+                  style={{
+                    color: mode === "dark" ? theme.heading : "black",
+                    marginTop: 5,
+                  }}
+                >
+                  {item.description
+                    ? item.description.length > 100
+                      ? item.description.slice(0, 100) + "..."
+                      : item.description
+                    : "No description available"}
+                </Text>
+                <TouchableOpacity
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(journal)/JournalDetails",
+                      params: { data: JSON.stringify(item) },
+                    })
+                  }
+                >
+                  <Text
+                    style={{
+                      color: "#007AFF",
+                      marginTop: 8,
+                      fontWeight: "600",
+                    }}
+                  >
+                    Read More →
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          />
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -159,37 +274,58 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 25,
   },
-  ContHeading: {
-    marginTop: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 5
-  },
   headingTxt: {
     fontSize: 30,
     fontWeight: "bold",
   },
-  switchWrapper: {
+  toggleContainer: {
     flexDirection: "row",
     alignSelf: "center",
-    padding: 5,
-    borderRadius: 30,
-    marginTop: 10,
-    width: 240,
+    backgroundColor: "#F0F4FA",
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: "#E3E6ED",
+    overflow: "hidden",
+    marginVertical: 10,
+    width: 200,
   },
-  btn: {
+  toggleButton: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 25,
-    alignItems: "center",
     justifyContent: "center",
+    alignItems: "center",
   },
-  btnText: {
+  toggleText: {
+    fontSize: 15,
+    color: "#7A8AA0",
+    fontWeight: "500",
+  },
+  activeToggle: {
+    backgroundColor: "#333F4F",
+    borderRadius: 25,
+  },
+  activeToggleText: {
+    color: "#FFF",
     fontWeight: "600",
-    fontSize: 16,
+  },
+  historyDesc: {
+    marginTop: 5,
+    paddingHorizontal: 20,
+    fontSize: 15,
+  },
+  hisHeading: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   subHeading: {
     paddingHorizontal: 15,
     marginTop: 10,
+  },
+  ContHeading: {
+    marginTop: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 5,
   },
   inputHeading: {
     flexDirection: "row",
@@ -216,7 +352,6 @@ const styles = StyleSheet.create({
   emotionTxt: {
     paddingVertical: 5,
     paddingHorizontal: 25,
-
   },
   emotionContainer: {
     marginHorizontal: 25,
@@ -225,25 +360,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     flexDirection: "row",
     borderRadius: 15,
-    flexGrow: 1,
     alignItems: "center",
-    justifyContent: "space-evenly"
-
+    justifyContent: "space-evenly",
   },
   imgCont: {
     width: 35,
-    height: 35
+    height: 35,
   },
   conBtn: {
-    marginTop:30,
+    marginTop: 30,
   },
-  btn:{
-    paddingHorizontal:15,
-    paddingVertical:15,
-    marginHorizontal:20,
-    marginVertical:10,
-    borderRadius:15
-  }
+  btn: {
+    paddingHorizontal: 15,
+    paddingVertical: 15,
+    marginHorizontal: 20,
+    marginVertical: 10,
+    borderRadius: 15,
+  },
 });
 
 export default Journal;

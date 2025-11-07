@@ -35,7 +35,7 @@ function Login() {
     setLoading(true);
 
     const response = await axios.post(
-      "https://wellness-backend-2-bd5h.onrender.com/api/login",
+      "https://calmness-app-full-stack.onrender.com/api/login",
       {
         userEmail: email,
         password: password,

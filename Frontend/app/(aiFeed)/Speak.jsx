@@ -1,12 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useState, useRef, useEffect } from "react";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert } from "react-native";
+import { useState, useRef, useEffect, useContext } from "react";
 import * as Speech from "expo-speech";
 import { Audio } from "expo-av";
-import { askAI } from "../(lib)/api";
-
+import { ThemeContext } from "../(lib)/ThemeContext";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 function Speak() {
+  const { theme } = useContext(ThemeContext);
+
   const [messages, setMessages] = useState([
     { role: "bot", text: "Hey there 👋 How are you feeling today?" },
   ]);
@@ -16,15 +18,14 @@ function Speak() {
   const scrollRef = useRef();
 
   useEffect(() => {
-    // Scroll to bottom whenever messages change
     scrollRef.current?.scrollToEnd({ animated: true });
   }, [messages]);
 
   const startRecording = async () => {
     try {
       const { status } = await Audio.requestPermissionsAsync();
-      if (status !== "granted") return alert("Permission required!");
-      
+      if (status !== "granted") return Alert.alert("Permission required!");
+
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
@@ -43,9 +44,11 @@ function Speak() {
     if (!recording) return;
     try {
       await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
       setRecording(null);
-      const text = "Simulated voice input"; // Replace with real speech-to-text API
+
+      const uri = recording.getURI();
+      // TODO: Replace with real speech-to-text API
+      const text = "Simulated voice input"; 
 
       handleVoiceMessage(text);
     } catch (err) {
@@ -55,49 +58,71 @@ function Speak() {
 
   const handleVoiceMessage = async (text) => {
     if (!text) return;
+
+    // Show only user message in chat
     const userMessage = { role: "user", text };
     setMessages((prev) => [...prev, userMessage]);
     setLoading(true);
 
-    const aiReply = await askAI(text);
-    const botMessage = { role: "bot", text: aiReply };
-    setMessages((prev) => [...prev, botMessage]);
-    setLoading(false);
+    try {
+      const response = await fetch(
+        "https://calmness-app-full-stack.onrender.com/api/airesponse",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text }),
+        }
+      );
 
-    Speech.speak(aiReply);
+      const data = await response.json();
+      const aiReply = data.reply || "No response from AI 😅";
+
+      // Speak AI reply only
+      Speech.speak(aiReply);
+    } catch (error) {
+      console.error("API Error:", error);
+      Alert.alert("Error", "Failed to get response from server.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Ionicons name="mic-outline" size={26} color="#4A6FA5" />
-        <Text style={styles.headerText}>Voice Calmness App</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.card }]}>
+        <Ionicons name="mic-outline" size={26} color={theme.primary} />
+        <Text style={[styles.headerText, { color: theme.primary }]}>Voice Calmness App</Text>
       </View>
 
       <ScrollView
         ref={scrollRef}
         style={styles.chatContainer}
         contentContainerStyle={{ padding: 16 }}
+        showsVerticalScrollIndicator={false}
       >
         {messages.map((m, i) => (
           <View
             key={i}
-            style={m.role === "user" ? styles.userMessage : styles.botMessage}
+            style={[
+              m.role === "user"
+                ? [styles.userMessage, { backgroundColor: theme.primary }]
+                : [styles.botMessage, { backgroundColor: theme.card }]
+            ]}
           >
-            <Text style={m.role === "user" ? styles.userText : styles.botText}>
+            <Text style={{ color: m.role === "user" ? "#fff" : theme.text, fontSize: 15 }}>
               {m.text}
             </Text>
           </View>
         ))}
 
         {loading && (
-          <View style={styles.botMessage}>
-            <Text style={styles.botText}>Thinking...</Text>
+          <View style={[styles.botMessage, { backgroundColor: theme.card }]}>
+            <Text style={{ color: theme.text }}>Thinking...</Text>
           </View>
         )}
       </ScrollView>
 
-      <View style={styles.voiceContainer}>
+      <View style={[styles.voiceContainer, { backgroundColor: theme.card }]}>
         <TouchableOpacity
           style={recording ? styles.recordingButton : styles.voiceButton}
           onPress={recording ? stopRecording : startRecording}
@@ -108,20 +133,19 @@ function Speak() {
             color="#fff"
           />
         </TouchableOpacity>
-        <Text style={styles.voiceText}>
+        <Text style={[styles.voiceText, { color: theme.text }]}>
           {recording ? "Recording..." : "Tap to speak"}
         </Text>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F4F5F9" },
+  container: { flex: 1 },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
     paddingVertical: 12,
     paddingHorizontal: 16,
     elevation: 3,
@@ -132,32 +156,26 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#4A6FA5",
     marginLeft: 8,
   },
   chatContainer: { flex: 1 },
   botMessage: {
-    backgroundColor: "#E8ECF4",
     alignSelf: "flex-start",
     padding: 12,
     borderRadius: 16,
     marginVertical: 6,
     maxWidth: "85%",
   },
-  botText: { color: "#333", fontSize: 15 },
   userMessage: {
-    backgroundColor: "#4A6FA5",
     alignSelf: "flex-end",
     padding: 12,
     borderRadius: 16,
     marginVertical: 6,
     maxWidth: "85%",
   },
-  userText: { color: "#fff", fontSize: 15 },
   voiceContainer: {
     alignItems: "center",
     paddingVertical: 20,
-    backgroundColor: "#fff",
     borderTopWidth: 0.5,
     borderColor: "#ddd",
   },
@@ -173,7 +191,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     marginBottom: 10,
   },
-  voiceText: { color: "#333", fontSize: 16 },
+  voiceText: { fontSize: 16, marginTop: 4 },
 });
 
 export default Speak;

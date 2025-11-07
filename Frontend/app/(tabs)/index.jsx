@@ -47,7 +47,7 @@ export default function Index() {
         setUserName("Loading...");
         const userValue = await AsyncStorage.getItem("userId");
         const res = await axios.get(
-          `https://wellness-backend-2-bd5h.onrender.com/api/getJournal/${userValue}`
+          `https://calmness-app-full-stack.onrender.com/api/getJournal/${userValue}`
         );
         setUserName(res.data[0].UserId.firstName);
         setScore(res.data[0].score);

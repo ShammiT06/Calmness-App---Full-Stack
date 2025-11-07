@@ -7,7 +7,8 @@ export default function useFontHook()
         Inter:require("../assets/Fonts/Inter/static/Inter_28pt-Bold.ttf"),
         Interlight:require("../assets/Fonts/Inter/static/Inter_24pt-Light.ttf"),
         Lilita:require("../assets/Fonts/Lilita-One/LilitaOne-Regular.ttf"),
-        One:require("../assets/Fonts/OneSans/OpenSans.ttf")
+        One:require("../assets/Fonts/OneSans/OpenSans.ttf"),
+        elam:require("../assets/Fonts/Elms/Elms-Light.ttf")
     })
 
     return fontsLoaded
