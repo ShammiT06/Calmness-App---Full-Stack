@@ -8,6 +8,7 @@ import userData from "./Journal/getJournal.js"
 import userUpdate from "./authRoutes/updateUser.js"
 import downloadReport from "./Pdf/generatePdf.js"
 import aiChat from "./Ai/aiurl.js"
+import emotion from "./Journal/Emotions.js"
 
 
 
@@ -22,6 +23,7 @@ router.use("/userData",userData)
 router.use("/userupdate",userUpdate)
 router.use("/downloadpdf",downloadReport)
 router.use("/airesponse",aiChat)
+router.use("/emotions",emotion)
 router.get("/",(req,res)=>{
     res.json({
         message:"Availabe API Endpoints",
@@ -34,7 +36,8 @@ router.get("/",(req,res)=>{
             "/userData/:userId",
             "/userupdate/:email",
             "/downloadpdf/:userId",
-            "/airesponse"
+            "/airesponse",
+            "/emotions"
         ]
     })
 })
