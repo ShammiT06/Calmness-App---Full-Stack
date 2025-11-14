@@ -12,38 +12,55 @@ import {
   Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import Svg, { Path, Defs, LinearGradient, Stop } from "react-native-svg";
 
 const { width, height } = Dimensions.get("window");
 
-// 💓 Pulse-like graph (like ECG)
-const PulseGraph = ({ animatedValue }) => {
+// ✅ Animated sine wave component
+const AnimatedSineWave = ({ animatedValue }) => {
   const AnimatedPath = Animated.createAnimatedComponent(Path);
 
-  // Horizontal slow movement
+  // Smooth continuous left scroll
   const translateX = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -150], // move horizontally
+    outputRange: [0, -width], // shifts the wave smoothly to the left
   });
 
-  // Pulse waveform (heart-rate style)
-  const path =
-    "M0 50 L20 50 L25 45 L30 60 L40 30 L50 70 L60 50 L70 50 L80 50 L85 45 L90 60 L100 50 L120 50 L125 45 L130 60 L140 50 L160 50 L165 45 L170 60 L180 50 L200 50 L205 45 L210 60 L220 50 L240 50 L245 45 L250 60 L260 50 L280 50 L285 45 L290 60 L300 50";
+  // Create a smooth sine wave
+  const createSinePath = () => {
+    const amplitude = 25; // wave height
+    const wavelength = 80; // distance between peaks
+    const midY = 60; // middle line height
+
+    let path = `M 0 ${midY}`;
+    for (let x = 0; x <= width * 2; x++) {
+      const y = midY + amplitude * Math.sin((2 * Math.PI * x) / wavelength);
+      path += ` L ${x} ${y}`;
+    }
+    return path;
+  };
+
+  const path = createSinePath();
 
   return (
-    <View style={{ overflow: "hidden" }}>
+    <View
+      style={{
+        overflow: "hidden",
+      }}
+    >
       <Animated.View style={{ transform: [{ translateX }] }}>
-        <Svg height="100" width="450" viewBox="0 0 300 100">
+        <Svg height="120" width={width * 2} viewBox={`0 0 ${width * 2} 120`}>
           <Defs>
-            <LinearGradient id="pulseGrad" x1="0" y1="0" x2="1" y2="0">
-              <Stop offset="0" stopColor="#6F8BFF" stopOpacity="0.9" />
-              <Stop offset="1" stopColor="#B5A6FF" stopOpacity="0.6" />
+            <LinearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
+              <Stop offset="0" stopColor="#6D8DFF" stopOpacity="0.9" />
+              <Stop offset="1" stopColor="#C3A6FF" stopOpacity="0.6" />
             </LinearGradient>
           </Defs>
           <AnimatedPath
             d={path}
-            stroke="url(#pulseGrad)"
-            strokeWidth={3}
+            stroke="url(#grad)"
+            strokeWidth={4}
             fill="none"
           />
         </Svg>
@@ -52,19 +69,20 @@ const PulseGraph = ({ animatedValue }) => {
   );
 };
 
-export default function Breathing() {
+export default function Meditation() {
   const router = useRouter();
+  const { t } = useTranslation();
+
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [duration, setDuration] = useState(5 * 60);
-  const [phase, setPhase] = useState("Inhale");
-
   const intervalRef = useRef(null);
+
   const animatedValue = useRef(new Animated.Value(0)).current;
-  const graphPosition = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (isRunning) {
+      // timer
       intervalRef.current = setInterval(() => {
         setSeconds((prev) => {
           if (prev >= duration) {
@@ -75,69 +93,49 @@ export default function Breathing() {
           return prev + 1;
         });
       }, 1000);
-      startAnimation();
+
+      // wave animation
+      startSineAnimation();
     } else {
       clearInterval(intervalRef.current);
       animatedValue.stopAnimation();
-      graphPosition.stopAnimation();
     }
 
     return () => clearInterval(intervalRef.current);
   }, [isRunning]);
 
-  const startAnimation = () => {
-    // Horizontal scrolling pulse
+  const startSineAnimation = () => {
     Animated.loop(
       Animated.timing(animatedValue, {
         toValue: 1,
-        duration: 6000, // slower left-right
+        duration: 2500, // wave speed
         easing: Easing.linear,
         useNativeDriver: true,
       })
     ).start(() => animatedValue.setValue(0));
-
-    // Up/down breathing movement (slow inhale/exhale)
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(graphPosition, {
-          toValue: -20, // up (inhale)
-          duration: 4000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(graphPosition, {
-          toValue: 20, // down (exhale)
-          duration: 4000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-
-    // Toggle inhale/exhale label
-    let inhale = true;
-    const phaseInterval = setInterval(() => {
-      if (!isRunning) {
-        clearInterval(phaseInterval);
-        return;
-      }
-      inhale = !inhale;
-      setPhase(inhale ? "Inhale" : "Exhale");
-    }, 4000);
   };
 
   const formatTime = (sec) => {
-    const minutes = Math.floor(sec / 60)
-      .toString()
-      .padStart(2, "0");
+    const minutes = Math.floor(sec / 60).toString().padStart(2, "0");
     const seconds = (sec % 60).toString().padStart(2, "0");
     return `${minutes}:${seconds}`;
+  };
+
+  const handleStartPause = () => setIsRunning(!isRunning);
+  const handleReset = () => {
+    setIsRunning(false);
+    setSeconds(0);
+  };
+  const handleSetDuration = (mins) => {
+    setDuration(mins * 60);
+    setSeconds(0);
+    setIsRunning(false);
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <Image
-        source={require("../../assets/Dashboard/Guided.png")}
+        source={require("../../assets/Dashboard/Medi.png")}
         style={styles.backgroundImage}
         contentFit="cover"
       />
@@ -148,26 +146,25 @@ export default function Breathing() {
           color="#fff"
           onPress={() => router.back()}
         />
-        <Text style={styles.title}>Guided Breathing</Text>
+        <Text style={styles.title}>{t("Meditation Sessions")}</Text>
         <Text style={styles.timer}>{formatTime(seconds)}</Text>
+
+        <TouchableOpacity style={styles.reset} onPress={handleReset}>
+          <Text style={styles.resetText}>{t("reset")}</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.bottomContainer}>
-        <Animated.View
-          style={[styles.graphBox, { transform: [{ translateY: graphPosition }] }]}
-        >
-          <PulseGraph animatedValue={animatedValue} />
-        </Animated.View>
+        <View style={styles.graphBox}>
+          {/* ✅ Animated sine / heart-rate style wave */}
+          <AnimatedSineWave animatedValue={animatedValue} />
+        </View>
 
         <View style={styles.durationContainer}>
           {[5, 10, 15].map((min) => (
             <TouchableOpacity
               key={min}
-              onPress={() => {
-                setDuration(min * 60);
-                setSeconds(0);
-                setIsRunning(false);
-              }}
+              onPress={() => handleSetDuration(min)}
               style={[
                 styles.durationBtn,
                 duration === min * 60 && styles.durationSelected,
@@ -179,18 +176,15 @@ export default function Breathing() {
                   duration === min * 60 && { color: "#333F4F" },
                 ]}
               >
-                {min} min
+                {t("minutes", { count: min })}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        <TouchableOpacity
-          style={styles.startBtn}
-          onPress={() => setIsRunning(!isRunning)}
-        >
+        <TouchableOpacity style={styles.startBtn} onPress={handleStartPause}>
           <Text style={styles.startText}>
-            {isRunning ? "PAUSE" : "START"}
+            {isRunning ? t("pause") : t("start")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -199,22 +193,39 @@ export default function Breathing() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: "#000" },
   backgroundImage: { ...StyleSheet.absoluteFillObject },
-  content: { flex: 1, paddingHorizontal: 30, paddingVertical: 40 },
+  content: {
+    flex: 1,
+    paddingHorizontal: width * 0.07,
+    paddingVertical: height * 0.04,
+  },
   title: {
     color: "#fff",
-    fontSize: 28,
-    marginTop: 20,
+    fontSize: width * 0.07,
+    marginTop: height * 0.02,
     textAlign: "center",
     fontWeight: "600",
   },
   timer: {
     color: "#fff",
     textAlign: "center",
-    marginTop: 40,
-    fontSize: 60,
+    marginTop: height * 0.05,
+    fontSize: width * 0.16,
     fontWeight: "700",
+  },
+  reset: {
+    backgroundColor: "#E7F0FA",
+    paddingHorizontal: width * 0.05,
+    paddingVertical: height * 0.012,
+    borderRadius: 8,
+    marginTop: height * 0.03,
+    alignSelf: "center",
+  },
+  resetText: {
+    fontWeight: "600",
+    color: "#333F4F",
+    fontSize: width * 0.04,
   },
   bottomContainer: {
     flex: 1,
@@ -222,11 +233,11 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
     alignItems: "center",
-    paddingTop: 20,
+    paddingTop: height * 0.03,
   },
   graphBox: {
-    width: 320,
-    height: 160,
+    width: width * 0.8,
+    height: height * 0.22,
     borderRadius: 30,
     backgroundColor: "#E9EEF5",
     justifyContent: "center",
@@ -236,34 +247,34 @@ const styles = StyleSheet.create({
   },
   durationContainer: {
     flexDirection: "row",
-    gap: 10,
-    marginTop: 40,
+    gap: width * 0.03,
+    marginTop: height * 0.05,
   },
   durationBtn: {
     backgroundColor: "#F6F6F6",
     borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
+    paddingHorizontal: width * 0.04,
+    paddingVertical: height * 0.01,
   },
   durationSelected: {
     backgroundColor: "#E7F0FA",
   },
   durationText: {
-    fontSize: 15,
+    fontSize: width * 0.04,
     color: "#777",
   },
   startBtn: {
     backgroundColor: "#333F4F",
-    width: 300,
-    height: 50,
+    width: width * 0.8,
+    height: height * 0.065,
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 40,
+    marginTop: height * 0.05,
   },
   startText: {
     color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: width * 0.05,
+    fontWeight: "700",
   },
 });

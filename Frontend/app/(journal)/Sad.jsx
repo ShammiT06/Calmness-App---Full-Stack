@@ -6,17 +6,17 @@ import { router } from 'expo-router'
 const { width, height } = Dimensions.get('window')
 
 export default function Sad() {
-  const [selected, setSelected] = useState(null)
+
+  // 👇 DEFAULT SELECTED IS SAD
+  const [selected, setSelected] = useState("Sad")
 
   const emotions = ["Happy", "UnHappy", "Normal", "Sad", "Angry"]
 
-
-      let emotionColour = "#863EFA"
-
+  let emotionColour = "#863EFA"
 
   const handleJournal = async () => {
     if (!selected) {
-      return alert("Please Chooose Your emotions")
+      return alert("Please Choose Your Emotion")
     }
 
     router.push({
@@ -27,10 +27,6 @@ export default function Sad() {
       }
     })
   }
-
-
-  
-
 
   return (
     <View style={styles.container}>
@@ -49,20 +45,23 @@ export default function Sad() {
         <View style={styles.buttons}>
           {emotions.map((item) => {
             const isSelected = selected === item
+
             return (
               <TouchableOpacity
                 key={item}
                 style={[styles.btn, isSelected && styles.selectedBtn]}
                 onPress={() => {
-                  if (item === "Sad") {
-                    setSelected(item)
-                    return
-                  }
+                  setSelected(item);
+
+                  // If user taps Sad again → don't navigate
+                  if (item === "Sad") return;
+
+                  // Happy → main journal
                   if (item === "Happy") {
-                    router.push("/(journal)")
-                  }
-                  else {
-                    router.push(`/(journal)/${item}`)
+                    router.push("/(journal)");
+                  } else {
+                    // Other emotions → go to that page
+                    router.push(`/(journal)/${item}`);
                   }
                 }}
               >
@@ -73,7 +72,6 @@ export default function Sad() {
             )
           })}
         </View>
-
 
         <TouchableOpacity style={styles.confirmBtn} onPress={handleJournal}>
           <Text style={styles.confirmText}>Confirm</Text>

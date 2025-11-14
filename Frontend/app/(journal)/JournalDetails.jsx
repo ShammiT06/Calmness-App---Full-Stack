@@ -6,7 +6,7 @@ import {
   View,
 } from "react-native";
 import { useContext } from "react";
-import { ThemeContext } from "../(lib)/ThemeContext";
+import { ThemeContext } from "../lib/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";

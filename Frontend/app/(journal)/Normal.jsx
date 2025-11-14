@@ -5,17 +5,18 @@ import { router } from 'expo-router'
 
 const { width, height } = Dimensions.get('window')
 
-export default function Angry() {
-  const [selected, setSelected] = useState(null)
+export default function Normal() {
+
+  // 👇 Default selected emotion is NORMAL
+  const [selected, setSelected] = useState("Normal")
 
   const emotions = ["Happy", "UnHappy", "Normal", "Sad", "Angry"]
 
-    let emotionColour = "#F8541C"
-
+  let emotionColour = "#F8541C"   // your chosen color
 
   const handleJournal = async () => {
     if (!selected) {
-      return alert("Please Chooose Your emotions")
+      return alert("Please Choose Your Emotion")
     }
 
     router.push({
@@ -31,6 +32,8 @@ export default function Angry() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerText}>How are you feeling today ?</Text>
+
+        {/* 👇 Correct Emotion Title */}
         <Text style={styles.subHeaderText} className="font-one">Normal</Text>
       </View>
 
@@ -44,20 +47,22 @@ export default function Angry() {
         <View style={styles.buttons}>
           {emotions.map((item) => {
             const isSelected = selected === item
+
             return (
               <TouchableOpacity
                 key={item}
                 style={[styles.btn, isSelected && styles.selectedBtn]}
                 onPress={() => {
                   setSelected(item)
-                  if (item === "Normal") {
-                    setSelected(item)
-                    return
-                  }
+
+                  // 👇 If clicking Normal again → no navigation
+                  if (item === "Normal") return
+
+                  // Happy → Go back to main journal page
                   if (item === "Happy") {
                     router.push("/(journal)")
-                  }
-                  else {
+                  } else {
+                    // Other emotion pages
                     router.push(`/(journal)/${item}`)
                   }
                 }}
@@ -69,7 +74,6 @@ export default function Angry() {
             )
           })}
         </View>
-
 
         <TouchableOpacity style={styles.confirmBtn} onPress={handleJournal}>
           <Text style={styles.confirmText}>Confirm</Text>

@@ -1,13 +1,16 @@
-import { Stack } from "expo-router"
+import { Stack } from "expo-router";
+import { KeyboardAvoidingView, Platform } from "react-native";
 
-function Layout()
-{
-
-    return(<>
-    <Stack screenOptions={{headerShown:false}}>
+export default function Layout() {
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
+      <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Chat" />
         <Stack.Screen name="Speak" />
-    </Stack>
-    </>)
+      </Stack>
+    </KeyboardAvoidingView>
+  );
 }
-export default Layout

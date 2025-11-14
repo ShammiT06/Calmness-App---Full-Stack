@@ -1,4 +1,15 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Dimensions, TextInput } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Dimensions,
+  TextInput,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -13,6 +24,7 @@ export default function HealthScore() {
   const [userId, setUserId] = useState(null);
   const { emotion, color } = useLocalSearchParams();
 
+  // Load userId from local storage
   useEffect(() => {
     const loadUserId = async () => {
       try {
@@ -26,159 +38,216 @@ export default function HealthScore() {
   }, []);
 
   const handleConfirm = async () => {
-    if (!journal || !desc) {
-      return alert("Please fill all Required Fields");
+    if (!journal.trim() || !desc.trim()) {
+      Alert.alert("Missing Fields", "Please fill all required fields.");
+      return;
+    }
+
+    if (!userId) {
+      Alert.alert("Error", "User ID not found. Please re-login.");
+      return;
     }
 
     try {
-      const response = await fetch("https://calmness-app-full-stack.onrender.com/api/journal", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          UserId: userId, 
-          heading: journal,
-          description: desc,
-          emotions: emotion,
-        }),
-      });
+      const response = await fetch(
+        "https://calmness-app-full-stack.onrender.com/api/journal",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            UserId: userId,
+            heading: journal,
+            description: desc,
+            emotions: emotion,
+          }),
+        }
+      );
+
+      console.log("Response Status:", response.status);
 
       if (!response.ok) {
-        alert("There is an Error");
+        Alert.alert("Error", "Something went wrong while saving.");
         return;
       }
 
-      const date = new Date().toDateString()
-      await AsyncStorage.setItem("lstJournalDate",date)
-
       const data = await response.json();
-      console.log("Journal Saved");
+      console.log("Journal Saved:", data);
 
-      router.push({
-        pathname: "/(journal)/Score",
-      });
+      const date = new Date().toDateString();
+      await AsyncStorage.setItem("lstJournalDate", date);
+
+      Alert.alert("Success", "Journal saved successfully!", [
+        {
+          text: "OK",
+          onPress: () => router.push("/(journal)/Score"),
+        },
+      ]);
     } catch (error) {
-      console.log("There is an Error:", error);
+      console.error("Error saving journal:", error);
+      Alert.alert("Error", "Unable to connect to the server.");
     }
   };
 
   return (
-    <ScrollView
-      style={{ backgroundColor: "#E7F0FA" }}
-      contentContainerStyle={{ flexGrow: 1 }}
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: "#E7F0FA" }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      {/* Top Header */}
-      <View style={Styles.hero}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back-circle" size={30} color="#555" />
-        </TouchableOpacity>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Ionicons name="arrow-back-circle" size={32} color="#555" />
+          </TouchableOpacity>
 
-        <TouchableOpacity style={Styles.backbtn} onPress={()=>{
-          router.push("/(tabs)")
+          <TouchableOpacity
+            style={styles.skipBtn}
+            onPress={() => router.push("/(tabs)")}
+          >
+            <Text style={styles.skipText}>Skip</Text>
+          </TouchableOpacity>
+        </View>
 
-        }
-        }>
-          <Text>Skip</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Title */}
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>
+            What makes you
+            <Text style={{ color: color || "#4a90e2" }}>
+              {" "}
+              {emotion || "feel"}
+            </Text>{" "}
+            today?
+          </Text>
+          <Text style={styles.subtitle}>
+            Save your moments of this {emotion || "special"} day.
+          </Text>
+        </View>
 
-      <View style={{ paddingHorizontal: 20, marginTop: 20 }}>
-        <Text style={{ fontSize: 28, fontWeight: "700", color: "#333" }}>
-          What makes you <Text style={{ color: color }}> {emotion || "feel"} </Text> today?
-        </Text>
-      </View>
+        {/* Journal Title */}
+        <View style={styles.journalHeading}>
+          <TextInput
+            placeholder="Journal Title"
+            placeholderTextColor="#888"
+            style={styles.titleInput}
+            value={journal}
+            onChangeText={setJournal}
+          />
+          <Ionicons name="pencil-outline" size={22} color="#888" />
+        </View>
 
-      <Text style={Styles.subHeading}>
-        Save your moments of this {emotion || "special"} day
-      </Text>
-
-      <View style={Styles.journalHeading}>
-        <TextInput
-          placeholder="Journal Title"
-          style={{ flex: 1, fontSize: 16 }}
-          value={journal}
-          onChangeText={setJournal}
-        />
-        <Ionicons name="pencil-outline" size={20} color="#888" />
-      </View>
-
-      <View>
-        <Text style={Styles.subTxt}>Write your thoughts here</Text>
+        {/* Description Box */}
+        <Text style={styles.subText}>Write your thoughts here</Text>
         <TextInput
           placeholder="Your Ideas..."
+          placeholderTextColor="#aaa"
           multiline
-          numberOfLines={10}
-          style={Styles.textarea}
+          style={styles.textarea}
           value={desc}
           onChangeText={setDesc}
         />
 
-        <TouchableOpacity style={Styles.confirm} onPress={handleConfirm}>
-          <Text style={Styles.btnTxt}>Confirm</Text>
+        {/* Confirm Button */}
+        <TouchableOpacity
+          style={styles.confirmButton}
+          activeOpacity={0.8}
+          onPress={handleConfirm}
+        >
+          <Text style={styles.btnText}>Confirm</Text>
         </TouchableOpacity>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
-const Styles = StyleSheet.create({
-  hero: {
-    marginTop: 10,
+const styles = StyleSheet.create({
+  container: {
+    flexGrow: 1,
+    paddingBottom: 40,
+  },
+  header: {
+    marginTop: 20,
     paddingHorizontal: 20,
-    paddingVertical: 20,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  backbtn: {
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+  skipBtn: {
+    backgroundColor: "#fff",
+    paddingHorizontal: 15,
+    paddingVertical: 8,
     borderRadius: 10,
+    elevation: 2,
   },
-  subHeading: {
+  skipText: {
+    fontSize: 15,
+    color: "#333",
+  },
+  titleContainer: {
     paddingHorizontal: 20,
+    marginTop: 25,
+  },
+  title: {
+    fontSize: width * 0.065,
+    fontWeight: "700",
+    color: "#333",
+  },
+  subtitle: {
     marginTop: 10,
     color: "#555",
     fontSize: width * 0.045,
   },
   journalHeading: {
     flexDirection: "row",
-    margin: 10,
-    width: width * 0.96,
-    backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 10,
+    marginHorizontal: 20,
+    marginTop: 25,
     paddingHorizontal: 20,
+    backgroundColor: "#fff",
     borderRadius: 20,
+    elevation: 2,
   },
-  subTxt: {
-    paddingHorizontal: 20,
-    fontSize: width * 0.05,
-    fontWeight: "400",
+  titleInput: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 15,
+    color: "#333",
+  },
+  subText: {
+    paddingHorizontal: 25,
+    marginTop: 25,
+    fontSize: width * 0.045,
+    color: "#333",
+    fontWeight: "500",
   },
   textarea: {
-    paddingHorizontal: 20,
-    textAlignVertical: "top",
-    margin: 15,
-    borderRadius: 10,
-    height: height * 0.55,
     backgroundColor: "#fff",
+    marginHorizontal: 20,
+    marginTop: 10,
+    borderRadius: 15,
+    minHeight: height * 0.35,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
     fontSize: 16,
-  },
-  confirm: {
-    backgroundColor: "#fff",
-    paddingHorizontal: 20,
-    margin: width * 0.05,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  btnTxt: {
-    textAlign: "center",
-    fontSize: 20,
-    fontWeight: "700",
     color: "#333",
+    textAlignVertical: "top",
+    elevation: 2,
+  },
+  confirmButton: {
+    backgroundColor: "#4a90e2",
+    marginHorizontal: 40,
+    marginTop: 30,
+    borderRadius: 12,
+    paddingVertical: 14,
+    elevation: 3,
+  },
+  btnText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+    textAlign: "center",
   },
 });

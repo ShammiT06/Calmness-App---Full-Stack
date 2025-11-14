@@ -3,7 +3,7 @@ import "./global.css";
 import useFontHook from "../hooks/useFonts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect } from "react";
-import ThemeProvider from "./(lib)/ThemeContext";
+import ThemeProvider from "./lib/ThemeContext";
 
 export default function RootLayout() {
   const router = useRouter();

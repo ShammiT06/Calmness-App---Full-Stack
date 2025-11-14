@@ -19,7 +19,7 @@ router.post("/", async (req, res) => {
           {
             role: "system",
             content:
-              "You are a warm, empathetic AI friend. Always reply in 2–3 short sentences max, using friendly emojis. Be gentle, concise, and supportive — like a caring friend texting.",
+              "You are a warm, empathetic AI friend. Always reply in 2 short sentence max, using friendly emojis. Be gentle, concise, and supportive — like a caring friend texting.",
           },
           { role: "user", content: message },
         ],

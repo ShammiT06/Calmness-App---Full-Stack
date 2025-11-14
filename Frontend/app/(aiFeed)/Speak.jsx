@@ -3,10 +3,12 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert } from "rea
 import { useState, useRef, useEffect, useContext } from "react";
 import * as Speech from "expo-speech";
 import { Audio } from "expo-av";
-import { ThemeContext } from "../(lib)/ThemeContext";
+import { ThemeContext } from "../lib/ThemeContext";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 
 function Speak() {
+    const { t } = useTranslation();
   const { theme } = useContext(ThemeContext);
 
   const [messages, setMessages] = useState([
@@ -16,10 +18,23 @@ function Speak() {
   const [loading, setLoading] = useState(false);
 
   const scrollRef = useRef();
+  const abortController = useRef(null);
+  const isMounted = useRef(true);
 
   useEffect(() => {
     scrollRef.current?.scrollToEnd({ animated: true });
   }, [messages]);
+
+  // ✅ Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+      Speech.stop(); 
+      if (abortController.current) {
+        abortController.current.abort();
+      }
+    };
+  }, []);
 
   const startRecording = async () => {
     try {
@@ -47,9 +62,7 @@ function Speak() {
       setRecording(null);
 
       const uri = recording.getURI();
-      // TODO: Replace with real speech-to-text API
-      const text = "Simulated voice input"; 
-
+      const text = "Simulated voice input";
       handleVoiceMessage(text);
     } catch (err) {
       console.error("Failed to stop recording", err);
@@ -59,10 +72,12 @@ function Speak() {
   const handleVoiceMessage = async (text) => {
     if (!text) return;
 
-    // Show only user message in chat
     const userMessage = { role: "user", text };
     setMessages((prev) => [...prev, userMessage]);
     setLoading(true);
+
+    abortController.current = new AbortController();
+    const signal = abortController.current.signal;
 
     try {
       const response = await fetch(
@@ -71,19 +86,28 @@ function Speak() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: text }),
+          signal, 
         }
       );
+
+      if (!response.ok) throw new Error("Network error");
 
       const data = await response.json();
       const aiReply = data.reply || "No response from AI 😅";
 
-      // Speak AI reply only
-      Speech.speak(aiReply);
+      if (isMounted.current) {
+        Speech.speak(aiReply);
+        setMessages((prev) => [...prev, { role: "bot", text: aiReply }]);
+      }
     } catch (error) {
-      console.error("API Error:", error);
-      Alert.alert("Error", "Failed to get response from server.");
+      if (error.name === "AbortError") {
+        console.log("AI response request aborted");
+      } else {
+        console.error("API Error:", error);
+        Alert.alert("Error", "Failed to get response from server.");
+      }
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   };
 
@@ -91,7 +115,7 @@ function Speak() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.card }]}>
         <Ionicons name="mic-outline" size={26} color={theme.primary} />
-        <Text style={[styles.headerText, { color: theme.primary }]}>Voice Calmness App</Text>
+        <Text style={[styles.headerText, { color: theme.primary }]}>{t("calmnessapp")}</Text>
       </View>
 
       <ScrollView

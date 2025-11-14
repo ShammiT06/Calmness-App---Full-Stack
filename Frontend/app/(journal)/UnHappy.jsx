@@ -6,12 +6,13 @@ import { router } from 'expo-router'
 const { width, height } = Dimensions.get('window')
 
 export default function UnHappy() {
-  const [selected, setSelected] = useState(null)
+
+
+  const [selected, setSelected] = useState("UnHappy")
 
   const emotions = ["Happy", "UnHappy", "Normal", "Sad", "Angry"]
 
-    let emotionColour = "#176FD3"
-
+  let emotionColour = "#176FD3"
 
   const handleJournal = async () => {
     if (!selected) {
@@ -44,6 +45,7 @@ export default function UnHappy() {
         <View style={styles.buttons}>
           {emotions.map((item) => {
             const isSelected = selected === item
+
             return (
               <TouchableOpacity
                 key={item}
@@ -55,8 +57,7 @@ export default function UnHappy() {
                   }
                   if (item === "Happy") {
                     router.push("/(journal)")
-                  }
-                  else {
+                  } else {
                     router.push(`/(journal)/${item}`)
                   }
                 }}
@@ -69,8 +70,7 @@ export default function UnHappy() {
           })}
         </View>
 
-
-        <TouchableOpacity style={styles.confirmBtn} onPress={handleJournal }>
+        <TouchableOpacity style={styles.confirmBtn} onPress={handleJournal}>
           <Text style={styles.confirmText}>Confirm</Text>
         </TouchableOpacity>
       </View>

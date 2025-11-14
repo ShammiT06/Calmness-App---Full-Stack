@@ -6,16 +6,18 @@ import { useRouter } from 'expo-router'
 const { width, height } = Dimensions.get('window')
 
 export default function UnHappy() {
-  const [selected, setSelected] = useState(null)
+
+  // 👇 DEFAULT SELECTED SHOULD BE HAPPY
+  const [selected, setSelected] = useState("Happy")
+
   const router = useRouter()
   const emotions = ["Happy", "UnHappy", "Normal", "Sad", "Angry"]
 
   let emotionColour = "#018955"
 
-
   const handleJournal = async () => {
     if (!selected) {
-      return alert("Please Chooose Your emotions")
+      return alert("Please Choose Your Emotion")
     }
 
     router.push({
@@ -31,7 +33,7 @@ export default function UnHappy() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerText}>How are you feeling today ?</Text>
-        <Text style={styles.subHeaderText} className="font-one">Happy</Text>
+        <Text style={styles.subHeaderText} className='font-one'>Happy</Text>
       </View>
 
       <View style={styles.happyContainer}>
@@ -44,22 +46,18 @@ export default function UnHappy() {
         <View style={styles.buttons}>
           {emotions.map((item) => {
             const isSelected = selected === item
+
             return (
               <TouchableOpacity
                 key={item}
                 style={[styles.btn, isSelected && styles.selectedBtn]}
                 onPress={() => {
                   setSelected(item)
-                  if (item === "Happy") {
-                    setSelected(item)
-                    return
-                  }
-                  if (item === "Happy") {
-                    router.push("/(journal)")
-                  }
-                  else {
-                    router.push(`/(journal)/${item}`)
-                  }
+
+                  router.push({
+                    pathname: `/(journal)/${item}`,
+                    params: { selectedEmotion: item }
+                  })
                 }}
               >
                 <Text style={[styles.btnText, isSelected && styles.selectedText]}>

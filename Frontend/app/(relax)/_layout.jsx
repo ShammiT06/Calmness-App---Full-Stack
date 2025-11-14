@@ -6,7 +6,7 @@ function Layout()
     return(<>
     <Stack screenOptions={{headerShown:false}}>
         <Stack.Screen name="Breath" />
-        <Stack.Screen name="Speak" />
+        <Stack.Screen name="Med" />
     </Stack>
     </>)
 }

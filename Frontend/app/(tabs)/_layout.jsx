@@ -1,8 +1,29 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { View, Text } from "react-native";
+import { useTranslation } from "react-i18next";
+import "../lib/i18n"; 
 
 const TabLayout = () => {
+  const { t } = useTranslation(); 
+
+  const TabLabel = ({ label, focused, color }) => (
+    <View style={{ alignItems: "center" }}>
+      <Text style={{ color }}>{label}</Text>
+      {focused && (
+        <View
+          style={{
+            height: 3,
+            backgroundColor: "#A3D5D3",
+            width: 20,
+            marginTop: 4,
+            borderRadius: 2,
+          }}
+        />
+      )}
+    </View>
+  );
+
   return (
     <Tabs
       screenOptions={{
@@ -19,100 +40,51 @@ const TabLayout = () => {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: t("home"),
           tabBarIcon: ({ color }) => (
             <Ionicons name="home" size={20} color={color} />
           ),
           tabBarLabel: ({ focused, color }) => (
-            <View style={{ alignItems: "center" }}>
-              <Text style={{ color }}>{`Home`}</Text>
-              {focused && (
-                <View
-                  style={{
-                    height: 3,
-                    backgroundColor: "#A3D5D3", // Bottom border color
-                    width: 20,
-                    marginTop: 4,
-                    borderRadius: 2,
-                  }}
-                />
-              )}
-            </View>
+            <TabLabel label={t("home")} focused={focused} color={color} />
           ),
         }}
       />
+
       <Tabs.Screen
         name="Journal"
         options={{
-          title: "Journal",
+          title: t("journal"),
           tabBarIcon: ({ color }) => (
             <Ionicons name="reader" size={20} color={color} />
           ),
           tabBarLabel: ({ focused, color }) => (
-            <View style={{ alignItems: "center" }}>
-              <Text style={{ color }}>Journal</Text>
-              {focused && (
-                <View
-                  style={{
-                    height: 3,
-                    backgroundColor: "#A3D5D3",
-                    width: 20,
-                    marginTop: 4,
-                    borderRadius: 2,
-                  }}
-                />
-              )}
-            </View>
+            <TabLabel label={t("journal")} focused={focused} color={color} />
           ),
         }}
       />
+
       <Tabs.Screen
         name="Activities"
         options={{
-          title: "Activities",
+          title: t("activity"),
           tabBarIcon: ({ color }) => (
             <Ionicons name="walk" size={20} color={color} />
           ),
           tabBarLabel: ({ focused, color }) => (
-            <View style={{ alignItems: "center" }}>
-              <Text style={{ color }}>Activities</Text>
-              {focused && (
-                <View
-                  style={{
-                    height: 3,
-                    backgroundColor: "#A3D5D3",
-                    width: 20,
-                    marginTop: 4,
-                    borderRadius: 2,
-                  }}
-                />
-              )}
-            </View>
+            <TabLabel label={t("activity")} focused={focused} color={color} />
           ),
         }}
       />
+
       <Tabs.Screen
         name="Profile"
         options={{
-          title: "Profile",
+          title: t("profile"),
           tabBarIcon: ({ color }) => (
             <Ionicons name="person" size={20} color={color} />
           ),
           tabBarLabel: ({ focused, color }) => (
-            <View style={{ alignItems: "center" }}>
-              <Text style={{ color }}>Profile</Text>
-              {focused && (
-                <View
-                  style={{
-                    height: 3,
-                    backgroundColor: "#A3D5D3",
-                    width: 20,
-                    marginTop: 4,
-                    borderRadius:2,
-                  }}
-                />
-              )}
-            </View>
+            <TabLabel label={t("profile")} focused={focused} color={color} />
           ),
         }}
       />
