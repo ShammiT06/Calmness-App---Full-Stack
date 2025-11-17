@@ -11,8 +11,8 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    // ⏳ 10–15 seconds delay
-    const delay = Math.floor(Math.random() * 5000) + 10000; // 10000–15000 ms
+    // ⏳ 3–5 seconds delay
+    const delay = Math.floor(Math.random() * 2000) + 3000; // 3000–5000 ms
     await new Promise((resolve) => setTimeout(resolve, delay));
 
     const response = await axios.post(
