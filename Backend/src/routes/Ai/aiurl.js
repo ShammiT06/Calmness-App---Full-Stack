@@ -11,6 +11,10 @@ router.post("/", async (req, res) => {
   }
 
   try {
+    // ⏳ 10–15 seconds delay
+    const delay = Math.floor(Math.random() * 5000) + 10000; // 10000–15000 ms
+    await new Promise((resolve) => setTimeout(resolve, delay));
+
     const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
@@ -18,12 +22,13 @@ router.post("/", async (req, res) => {
         messages: [
           {
             role: "system",
-            content:"You are a warm, empathetic AI friend. Detect the user's language automatically (Tamil, English, Hindi, Telugu, or any other). Always reply in the SAME language as the user. Reply in max 4 short sentences with friendly emojis. Be gentle, concise, and supportive.",
+            content:
+              "You are a warm, empathetic AI friend. Detect the user's language automatically (Tamil, English, Hindi, Telugu, or any other). Always reply in the SAME language as the user. Reply in max 4 short sentences with friendly emojis. Be gentle, concise, and supportive. Detect the user's emotional tone (sad, stressed, happy, tired, angry). After your friendly reply, suggest ONE simple exercise based on the user's emotion (breathing, stretching, walking, mindfulness).",
           },
           { role: "user", content: message },
         ],
-        max_tokens: 80, 
-        temperature: 0.8, 
+        max_tokens: 120,
+        temperature: 0.8,
       },
       {
         headers: {
@@ -32,6 +37,7 @@ router.post("/", async (req, res) => {
         },
       }
     );
+
     const aiReply =
       response.data.choices?.[0]?.message?.content ||
       "No response from AI 😅";
